@@ -68,7 +68,23 @@ def correction_abberations():
 # **********************************************************************************************************************
 # 2. Faire une rotation de l image
 # **********************************************************************************************************************
+def rotation():
+    plt.gray()
+    img_rotation = mpimg.imread('goldhill_rotate.png')
+    img_rotation = np.mean(img_rotation, -1)
 
+    M_tranfo = [[0,1],[-1, 0]]
+
+    rows, columns = np.shape(img_rotation)
+    new_img = np.zeros([int(columns), int(rows)])
+    for i in range(0, rows):
+        for j in range(0, columns):
+            x = j*M_tranfo[0][0] + i*M_tranfo[1][0]
+            y = j*M_tranfo[0][1] + i*M_tranfo[1][1]
+            new_img[int(y)][int(x)] = img_rotation[i][j]
+
+    plt.imshow(new_img)
+    plt.show()
 
 
 # **********************************************************************************************************************
@@ -96,7 +112,7 @@ def enlever_bruit():
 # Main
 # **********************************************************************************************************************
 if __name__ == '__main__':
-    correction_abberations()
+    rotation()
 
     plt.show()
 
