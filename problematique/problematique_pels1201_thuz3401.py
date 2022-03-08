@@ -10,20 +10,18 @@ import math
 import sys
 from zplane import zplane
 
-# TODO: Remove uneeded imports
-
 # **********************************************************************************************************************
 # 1. Trouver et appliquer la fonction de transfert inverse
 # **********************************************************************************************************************
 
-def correction_aberrations(img_aberrations):
+def corriger_aberrations(img_aberrations):
     # img_aberrations = np.load("goldhill_aberrations.npy")
 
     # H = ((z - 0.9*math.exp(1j*np.pi/2)) * (z - 0.9*math.exp(-1j*np.pi/2)) * (z - 0.95*math.exp(1j*np.pi/8)) * (z - 0.95*math.exp(-1j*np.pi/8)) / (z * math.pow(z + 0.99, 2) * (z - 0.8))
     numerateurs = np.poly([0, -0.99, -0.99, 0.8])
     denominateurs = np.poly([0.9*np.exp(1j*np.pi/2), 0.9*np.exp(-1j*np.pi/2), 0.95*np.exp(1j*np.pi/8), 0.95*np.exp(-1j*np.pi/8)])
 
-    plt.figure()
+    # plt.figure()
     plt.title('Pôles et zéros de la fonction de transfert inverse pour retirer aberrations')
     zeros, poles, k = zplane(numerateurs, denominateurs, 'pz_aberrations_inv.jpg')
     # print('zeros = ', zeros)
@@ -46,7 +44,7 @@ def correction_aberrations(img_aberrations):
 # **********************************************************************************************************************
 # 2. Rotation de l image
 # **********************************************************************************************************************
-def rotation(img_rotation):
+def appliquer_rotation(img_rotation):
     # img_rotation = np.mean(mpimg.imread('goldhill_rotate.png', -1))
 
     M_tranfo = [[0, 1], [-1, 0]]
@@ -71,7 +69,7 @@ def rotation(img_rotation):
 # 3. Enlever le bruit de l image
 # **********************************************************************************************************************
 
-def bilineraire(img_bruit):
+def calculer_bilineraire(img_bruit):
     '''
     Enlever le bruit d une image en la filtrant par un filtre trouve manuellement
     :param img_bruit: Image dont on veut retirer le bruit
@@ -94,7 +92,7 @@ def bilineraire(img_bruit):
     w, h = signal.freqz(numerateurs, denominateurs)
 
     plt.figure()
-    plt.title('Module de la réponse en fréquence du filtre Butterorth d\'ordre 2 déterminé avec transformation bilinéaire')
+    plt.title('Module de la réponse en fréquence du filtre Butterworth d\'ordre 2 déterminé avec transformation bilinéaire')
     plt.plot(w * fs / (2 * np.pi), 20 * np.log10(abs(h)))
     plt.ylabel('Amplitude (dB)')
     plt.xlabel('Fréquence (Hz)')
@@ -103,7 +101,7 @@ def bilineraire(img_bruit):
 
     plt.figure()
     plt.imshow(img_sortie)
-    plt.title('Image filtrée avec filtre Butterworth ordre 2 calculé a la main')
+    plt.title('Image debruitée avec filtre Butterworth ordre 2 déterminé avec transformation bilinéaire')
 
 def enlever_bruit(img_bruit):
     '''
@@ -177,7 +175,7 @@ def enlever_bruit(img_bruit):
 
     plt.figure()
     plt.imshow(img_sortie)
-    plt.title('Image filtrée avec filtre numérique elliptique d\'ordre ' + str(order))
+    plt.title('Image débruitée avec filtre numérique elliptique d\'ordre ' + str(order))
 
     return img_sortie
 
@@ -193,18 +191,6 @@ def enlever_bruit(img_bruit):
 #                 new_img[i][j] = img[i][j]
 #     return new_img
 
-def retirer_pourcentage(img, pourcentage):
-    '''
-    Remplacer les dernier pourcentage de lignes de l image par des lignes noires
-    :param img: l image originale
-    :return: l image avec lignes remplacees par du noir
-    '''
-    new_img = np.zeros([img.shape[0], img.shape[1]])
-    for i in range(int(img.shape[0] * (1 - pourcentage))):
-            for j in range(new_img.shape[1]):
-                new_img[i][j] = img[i][j]
-    return new_img
-
 # Retirer 70 pourcent des lignes
 # def retirer_70(img):
 #     new_img = np.zeros([img.shape[0], img.shape[1]])
@@ -214,28 +200,34 @@ def retirer_pourcentage(img, pourcentage):
 #                 new_img[i][j] = img[i][j]
 #     return new_img
 
-def compression(img_complete):
+def retirer_pourcentage(img, pourcentage):
+    '''
+    Remplacer les dernier pourcentage de lignes de l image par des lignes noires
+    :param img: l image originale
+    :param pourcentage: le pourcentage de lignes de l image a retirer a la fin
+    :return: l image avec lignes remplacees par du noir
+    '''
+    new_img = np.zeros([img.shape[0], img.shape[1]])
+    for i in range(int(img.shape[0] * (1 - pourcentage))):
+            for j in range(new_img.shape[1]):
+                new_img[i][j] = img[i][j]
+    return new_img
 
-    # plt.figure()
-    # plt.imshow(img_complete)
-    # plt.title('img_complete')
-
-    print(img_complete.shape)
+def compresser_decompresser(img_complete):
 
     matrice_covariance = np.cov(img_complete)
 
     w, v = np.linalg.eig(matrice_covariance)
-
-    # w, v = np.linalg.eig(np.array([[4, 1], [2, 5]]))
     # w est valeurs propres
-    # v est vecteur propre
+    # v est vecteurs propre
 
-    # print(w)
-    # print(v)
+    # Verification matrice A
+    # w, v = np.linalg.eig(np.array([[4, 1], [2, 5]]))
+    # print(w) # w est valeurs propres
+    # print(v) # v est vecteur propre
 
     # La matrice de passage est directement v
     m_p = v;
-    # m_p_inv = np.linalg.inv(m_p)
 
     # m_p = []
     # for vecteur_propre in v:
@@ -269,16 +261,16 @@ if __name__ == '__main__':
     img = np.load("image_complete.npy")
 
     # 1.
-    img = correction_aberrations(img)
+    img = corriger_aberrations(img)
 
     # 2.
-    img = rotation(img)
+    img = appliquer_rotation(img)
 
     # 3.
-    bilineraire(img)
-    img = enlever_bruit(img)
+    calculer_bilineraire(img) # Pour verifier le resultat manuel sans conserver pour la prochaine etape
+    img = enlever_bruit(img) # Pour conserver le resultat du filtre numerique elliptique pour la prochaine etape
 
     # 4.
-    compression(img)
+    compresser_decompresser(img)
 
     plt.show()
