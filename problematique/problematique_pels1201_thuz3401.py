@@ -1,4 +1,5 @@
-# S5 APP4 Problematique
+# Universite de Sherbrooke
+# S5 H22 GI APP4 Problematique
 # Simon Pelletier (PELS1201)
 # Zachary Thuotte (THUZ3401)
 
@@ -227,7 +228,7 @@ def compresser_decompresser(img_complete):
     # print(v) # v est vecteur propre
 
     # La matrice de passage est directement v
-    m_p = v;
+    m_p = v
 
     # m_p = []
     # for vecteur_propre in v:
